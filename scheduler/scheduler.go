@@ -42,6 +42,7 @@ import (
 	"d7y.io/dragonfly/v2/pkg/net/ip"
 	pkgredis "d7y.io/dragonfly/v2/pkg/redis"
 	"d7y.io/dragonfly/v2/pkg/rpc"
+	inferenceclient "d7y.io/dragonfly/v2/pkg/rpc/inference/client"
 	managerclient "d7y.io/dragonfly/v2/pkg/rpc/manager/client"
 	securityclient "d7y.io/dragonfly/v2/pkg/rpc/security/client"
 	trainerclient "d7y.io/dragonfly/v2/pkg/rpc/trainer/client"
@@ -82,6 +83,9 @@ type Server struct {
 
 	// Trainer client.
 	trainerClient trainerclient.V1
+
+	// Inference client.
+	inferenceClient inferenceclient.V1
 
 	// Resource interface.
 	resource resource.Resource
@@ -141,7 +145,7 @@ func New(ctx context.Context, cfg *config.Config, d dfpath.Dfpath) (*Server, err
 	}
 	s.managerClient = managerClient
 
-	// Initialize dial options of trainer grpc client.
+	// Initialize dial options of trainer and inference grpc client.
 	if cfg.Trainer.Enable {
 		trainerDialOptions := []grpc.DialOption{}
 		if cfg.Security.AutoIssueCert {
@@ -161,6 +165,26 @@ func New(ctx context.Context, cfg *config.Config, d dfpath.Dfpath) (*Server, err
 			return nil, err
 		}
 		s.trainerClient = trainerClient
+
+		inferenceDialOptions := []grpc.DialOption{}
+		if cfg.Security.AutoIssueCert {
+			clientTransportCredentials, err := rpc.NewClientCredentials(cfg.Security.TLSPolicy, nil, []byte(cfg.Security.CACert))
+			if err != nil {
+				return nil, err
+			}
+
+			inferenceDialOptions = append(inferenceDialOptions, grpc.WithTransportCredentials(clientTransportCredentials))
+		} else {
+			inferenceDialOptions = append(inferenceDialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		}
+
+		// Initialize inference client.
+		inferenceClient, err := inferenceclient.GetV1(ctx, cfg.Trainer.InferenceAddr, inferenceDialOptions...)
+		if err != nil {
+			return nil, err
+		}
+		s.inferenceClient = inferenceClient
+
 	}
 
 	// Initialize dial options of announcer.

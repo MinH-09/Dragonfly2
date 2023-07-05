@@ -92,5 +92,6 @@ networkTopology:
 trainer:
   enable: false
   addr: "127.0.0.1:9000"
+  inferenceAddr: "127.0.0.1:8000"
   interval: 10m
   uploadTimeout: 2h

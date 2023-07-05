@@ -177,6 +177,9 @@ const (
 	// DefaultTrainerAddr is the default address of trainer.
 	DefaultTrainerAddr = "127.0.0.1:9000"
 
+	// DefaultTrainerInferenceAddr is the default address of inference.
+	DefaultTrainerInferenceAddr = "127.0.0.1:8000"
+
 	// DefaultTrainerInterval is the default interval of training.
 	DefaultTrainerInterval = 7 * 24 * time.Hour
 
