@@ -19,6 +19,7 @@ package scheduler
 import (
 	"context"
 	"crypto/tls"
+	"d7y.io/dragonfly/v2/scheduler/scheduling/evaluator"
 	"errors"
 	"fmt"
 	"net"
@@ -184,7 +185,6 @@ func New(ctx context.Context, cfg *config.Config, d dfpath.Dfpath) (*Server, err
 			return nil, err
 		}
 		s.inferenceClient = inferenceClient
-
 	}
 
 	// Initialize dial options of announcer.
@@ -289,8 +289,14 @@ func New(ctx context.Context, cfg *config.Config, d dfpath.Dfpath) (*Server, err
 		}
 	}
 
+	// Initialize dial options of evaluator.
+	evaluatorOptions := []evaluator.Option{}
+	if s.inferenceClient != nil {
+		evaluatorOptions = append(evaluatorOptions, evaluator.WithInferenceClient(s.inferenceClient))
+	}
+
 	// Initialize scheduling.
-	scheduling := scheduling.New(&cfg.Scheduler, dynconfig, d.PluginDir())
+	scheduling := scheduling.New(&cfg.Scheduler, dynconfig, d.PluginDir(), evaluatorOptions...)
 
 	// Initialize server options of scheduler grpc server.
 	schedulerServerOptions := []grpc.ServerOption{}
@@ -446,6 +452,15 @@ func (s *Server) Stop() {
 	// Stop trainer client.
 	if s.trainerClient != nil {
 		if err := s.trainerClient.Close(); err != nil {
+			logger.Errorf("trainer client failed to stop: %s", err.Error())
+		} else {
+			logger.Info("trainer client closed")
+		}
+	}
+
+	// Stop inference client.
+	if s.inferenceClient != nil {
+		if err := s.inferenceClient.Close(); err != nil {
 			logger.Errorf("trainer client failed to stop: %s", err.Error())
 		} else {
 			logger.Info("trainer client closed")

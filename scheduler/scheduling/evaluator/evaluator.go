@@ -27,6 +27,9 @@ const (
 	// MLAlgorithm is a machine learning scheduling algorithm.
 	MLAlgorithm = "ml"
 
+	// AIAlgorithm is a intelligent scheduling algorithm.
+	AIAlgorithm = "ai"
+
 	// PluginAlgorithm is a scheduling algorithm based on plugin extension.
 	PluginAlgorithm = "plugin"
 )
@@ -39,7 +42,7 @@ type Evaluator interface {
 	IsBadNode(peer *resource.Peer) bool
 }
 
-func New(algorithm string, pluginDir string) Evaluator {
+func New(algorithm string, pluginDir string, options ...Option) Evaluator {
 	switch algorithm {
 	case PluginAlgorithm:
 		if plugin, err := LoadPlugin(pluginDir); err == nil {
@@ -48,6 +51,8 @@ func New(algorithm string, pluginDir string) Evaluator {
 	// TODO Implement MLAlgorithm.
 	case MLAlgorithm, DefaultAlgorithm:
 		return NewEvaluatorBase()
+	case AIAlgorithm:
+		return NewEvaluatorAI(options...)
 	}
 
 	return NewEvaluatorBase()
