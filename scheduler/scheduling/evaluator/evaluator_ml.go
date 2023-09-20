@@ -17,10 +17,15 @@
 package evaluator
 
 import (
+	"context"
+	"log"
 	"math/big"
+	"strconv"
+	"strings"
 
 	"github.com/montanaflynn/stats"
 
+	"d7y.io/api/pkg/apis/inference/v1"
 	logger "d7y.io/dragonfly/v2/internal/dflog"
 	inferenceclient "d7y.io/dragonfly/v2/pkg/rpc/inference/client"
 	"d7y.io/dragonfly/v2/scheduler/resource"
@@ -49,10 +54,84 @@ func NewEvaluatorML(options ...Option) Evaluator {
 	return em
 }
 
+func (em *evaluatorML) getIP(ip string) []int64 {
+	parts := strings.Split(ip, ".")
+	var input []int64
+	for _, part := range parts {
+		if i, err := strconv.ParseInt(part, 10, 64); err != nil {
+			log.Fatal(err)
+		} else {
+			input = append(input, i)
+		}
+	}
+	return input
+}
+
+func (em *evaluatorML) getIDC(idc string) []int64 {
+	IDC := []string{"a", "b", "c", "d", "e"}
+	intput := make([]int64, len(IDC))
+	for i, _ := range IDC {
+		if idc == IDC[i] {
+			intput[i] = 1
+		} else {
+			intput[i] = 0
+		}
+	}
+	return intput
+}
+
+func (em *evaluatorML) getLocation(location string) []int64 {
+	Location := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
+	intput := make([]int64, len(Location))
+	for i, _ := range Location {
+		if location == Location[i] {
+			intput[i] = 1
+		} else {
+			intput[i] = 0
+		}
+	}
+	return intput
+}
+
 // The larger the value after evaluation, the higher the priority.
 func (em *evaluatorML) Evaluate(parent *resource.Peer, child *resource.Peer, totalPieceCount int32) float64 {
+	inferInputs := []*inference.ModelInferRequest_InferInputTensor{
+		{
+			Name:     "IP",
+			Datatype: "INT32",
+			Shape:    []int64{1, 4},
+			Contents: &inference.InferTensorContents{Int64Contents: em.getIP(parent.Host.IP)},
+		},
+		{
+			Name:     "IDC",
+			Datatype: "INT32",
+			Shape:    []int64{1, 5},
+			Contents: &inference.InferTensorContents{Int64Contents: em.getIDC(parent.Host.Network.IDC)},
+		},
+		{
+			Name:     "Location",
+			Datatype: "INT32",
+			Shape:    []int64{1, 10},
+			Contents: &inference.InferTensorContents{Int64Contents: em.getLocation(parent.Host.Network.Location)},
+		},
+	}
+	inferOutputs := []*inference.ModelInferRequest_InferRequestedOutputTensor{
+		{
+			Name: "OUTPUT0",
+		},
+	}
+	inferRequest := inference.ModelInferRequest{
+		ModelName:    "test",
+		ModelVersion: "1",
+		Inputs:       inferInputs,
+		Outputs:      inferOutputs,
+	}
 
-	return 0
+	inferResponse, err := em.inferenceClient.ModelInfer(context.Background(), &inferRequest)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return float64(inferResponse.RawOutputContents[0][0])
 }
 
 func (em *evaluatorML) IsBadNode(peer *resource.Peer) bool {
