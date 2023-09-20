@@ -19,7 +19,6 @@ package scheduler
 import (
 	"context"
 	"crypto/tls"
-	"d7y.io/dragonfly/v2/scheduler/scheduling/evaluator"
 	"errors"
 	"fmt"
 	"net"
@@ -56,6 +55,7 @@ import (
 	"d7y.io/dragonfly/v2/scheduler/resource"
 	"d7y.io/dragonfly/v2/scheduler/rpcserver"
 	"d7y.io/dragonfly/v2/scheduler/scheduling"
+	"d7y.io/dragonfly/v2/scheduler/scheduling/evaluator"
 	"d7y.io/dragonfly/v2/scheduler/storage"
 )
 

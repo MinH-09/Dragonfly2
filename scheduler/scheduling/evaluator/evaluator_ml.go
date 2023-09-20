@@ -26,35 +26,36 @@ import (
 	"d7y.io/dragonfly/v2/scheduler/resource"
 )
 
-type evaluatorAI struct {
+type evaluatorML struct {
 	inferenceClient inferenceclient.V1
 }
 
 // WithInferenceClient sets the grpc client of inference.
 func WithInferenceClient(client inferenceclient.V1) Option {
-	return func(ea *evaluatorAI) {
-		ea.inferenceClient = client
+	return func(em *evaluatorML) {
+		em.inferenceClient = client
 	}
 }
 
 // Option is a functional option for configuring the announcer.
-type Option func(ea *evaluatorAI)
+type Option func(em *evaluatorML)
 
-func NewEvaluatorAI(options ...Option) Evaluator {
-	ea := &evaluatorAI{}
+func NewEvaluatorML(options ...Option) Evaluator {
+	em := &evaluatorML{}
 	for _, opt := range options {
-		opt(ea)
+		opt(em)
 	}
 
-	return ea
+	return em
 }
 
 // The larger the value after evaluation, the higher the priority.
-func (ea *evaluatorAI) Evaluate(parent *resource.Peer, child *resource.Peer, totalPieceCount int32) float64 {
+func (em *evaluatorML) Evaluate(parent *resource.Peer, child *resource.Peer, totalPieceCount int32) float64 {
+
 	return 0
 }
 
-func (ea *evaluatorAI) IsBadNode(peer *resource.Peer) bool {
+func (em *evaluatorML) IsBadNode(peer *resource.Peer) bool {
 	if peer.FSM.Is(resource.PeerStateFailed) || peer.FSM.Is(resource.PeerStateLeave) || peer.FSM.Is(resource.PeerStatePending) ||
 		peer.FSM.Is(resource.PeerStateReceivedTiny) || peer.FSM.Is(resource.PeerStateReceivedSmall) ||
 		peer.FSM.Is(resource.PeerStateReceivedNormal) || peer.FSM.Is(resource.PeerStateReceivedEmpty) {

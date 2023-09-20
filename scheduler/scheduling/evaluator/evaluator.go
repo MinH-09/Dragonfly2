@@ -27,9 +27,6 @@ const (
 	// MLAlgorithm is a machine learning scheduling algorithm.
 	MLAlgorithm = "ml"
 
-	// AIAlgorithm is a intelligent scheduling algorithm.
-	AIAlgorithm = "ai"
-
 	// PluginAlgorithm is a scheduling algorithm based on plugin extension.
 	PluginAlgorithm = "plugin"
 )
@@ -49,10 +46,10 @@ func New(algorithm string, pluginDir string, options ...Option) Evaluator {
 			return plugin
 		}
 	// TODO Implement MLAlgorithm.
-	case MLAlgorithm, DefaultAlgorithm:
+	case DefaultAlgorithm:
 		return NewEvaluatorBase()
-	case AIAlgorithm:
-		return NewEvaluatorAI(options...)
+	case MLAlgorithm:
+		return NewEvaluatorML(options...)
 	}
 
 	return NewEvaluatorBase()
