@@ -70,7 +70,7 @@ func (em *evaluatorML) getIP(ip string) []int64 {
 func (em *evaluatorML) getIDC(idc string) []int64 {
 	IDC := []string{"a", "b", "c", "d", "e"}
 	intput := make([]int64, len(IDC))
-	for i, _ := range IDC {
+	for i := range IDC {
 		if idc == IDC[i] {
 			intput[i] = 1
 		} else {
@@ -83,7 +83,7 @@ func (em *evaluatorML) getIDC(idc string) []int64 {
 func (em *evaluatorML) getLocation(location string) []int64 {
 	Location := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
 	intput := make([]int64, len(Location))
-	for i, _ := range Location {
+	for i := range Location {
 		if location == Location[i] {
 			intput[i] = 1
 		} else {
